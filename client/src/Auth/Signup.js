@@ -14,8 +14,23 @@ function Signup() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (localStorage.getItem("book-auth") && localStorage.getItem("book-bug")) {
+      navigate("/dash");
+    }
+  }, [navigate]);
+
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
-      if (currentUser) navigate("/dash");
+      if (currentUser) {
+        if (
+          !localStorage.getItem("book-auth") ||
+          !localStorage.getItem("book-bug")
+        ) {
+          localStorage.setItem("book-auth", "true");
+          localStorage.setItem("book-bug", currentUser.email);
+          navigate("/dash");
+        }
+      }
     });
     return () => unsubscribe();
   }, [navigate]);
@@ -69,10 +84,13 @@ function Signup() {
         books,
       });
 
+      // Store user data in local storage
       localStorage.setItem("book-auth", "true");
+      localStorage.setItem("book-bug", email);
       navigate("/dash");
     } catch (err) {
       setError(err.message);
+      console.error("Error during signup:", err); // Log error for debugging
     }
   };
 

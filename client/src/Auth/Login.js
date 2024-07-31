@@ -15,21 +15,23 @@ function Login() {
   }, [navigate]);
 
   const [error, setError] = useState("");
-  const [passwordInputRef, setPasswordInputRef] = useState("");
+  const [password, setPassword] = useState("");
   const emailInputRef = useRef();
 
   const handlePasswordChange = (e) => {
-    setPasswordInputRef(e.target.value);
+    setPassword(e.target.value);
   };
 
   const logInForm = async (e) => {
     e.preventDefault();
     const email = emailInputRef.current.value;
-    const password = passwordInputRef;
+    const passwordValue = password;
     setError("");
     try {
-      await signInWithEmailAndPassword(firebaseAuth, email, password);
+      await signInWithEmailAndPassword(firebaseAuth, email, passwordValue);
       localStorage.setItem("book-auth", "true");
+      localStorage.setItem("book-bug", email);
+      localStorage.setItem("book", email);
       navigate("/dash");
     } catch (err) {
       setError(err.message);
@@ -37,9 +39,15 @@ function Login() {
     }
   };
 
-  onAuthStateChanged(firebaseAuth, (currentUser) => {
-    if (currentUser) navigate("/dash");
-  });
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
+      if (currentUser) {
+        navigate("/dash");
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
 
   return (
     <div className="w-full h-screen flex justify-center items-center bg-gray-100">
@@ -67,12 +75,12 @@ function Login() {
                 className="border p-2 w-full text-black"
                 type="password"
                 placeholder="Enter Password"
-                value={passwordInputRef}
+                value={password}
                 onChange={handlePasswordChange}
               />
-              {passwordInputRef !== "" ? (
+              {password !== "" ? (
                 <PasswordChecklist
-                  value={passwordInputRef}
+                  value={password}
                   rules={[
                     "minLength",
                     "lowercase",

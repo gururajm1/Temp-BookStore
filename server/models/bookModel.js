@@ -1,6 +1,10 @@
 // models/userModel.js
 const mongoose = require("mongoose");
 
+const reviewSchema = new mongoose.Schema({
+  reviewDesc: String,
+});
+
 const bookSchema = new mongoose.Schema({
   title: String,
   subtitle: String,
@@ -8,6 +12,7 @@ const bookSchema = new mongoose.Schema({
   price: String,
   image: String,
   url: String,
+  reviews: [reviewSchema],
 });
 
 const userSchema = new mongoose.Schema({
