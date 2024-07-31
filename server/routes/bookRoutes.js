@@ -7,6 +7,7 @@ const userController = require("../controller/bookController");
 router.post("/signup", userController.signUpUser);
 router.get("/books", userController.getAllBooks);
 router.get("/users/:email", userController.getUserByEmail);
+router.delete("/delete-book", userController.deleteBook);
 // router.get("/users/:email", async (req, res) => {
 //   try {
 //     const user = await Main.findOne({ email: req.params.email });

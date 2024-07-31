@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   books: [bookSchema], // Embedding bookSchema in the userSchema
+  // userAdded: {
+  //   type: Boolean,
+  //   default: false, // Default value if not provided
+  // },
 });
 
 const Main = mongoose.model("Main", userSchema);

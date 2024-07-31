@@ -2,22 +2,24 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const Button = ({ variant, className, ...props }) => {
+const Button = ({ variant, className, onClick, ...props }) => {
   const baseStyles = "px-4 py-2 rounded-md";
   const variantStyles =
     variant === "outline" ? "border border-gray-300" : "bg-blue-500 text-white";
   return (
     <button
       className={`${baseStyles} ${variantStyles} ${className}`}
+      onClick={onClick}
       {...props}
     />
   );
 };
 
-const Card = ({ className, children }) => {
+const Card = ({ className, children, onClick }) => {
   return (
     <div
-      className={`bg-white shadow-md rounded-md transition-transform transform hover:scale-105 hover:shadow-xl ${className}`}
+      onClick={onClick}
+      className={`bg-white shadow-md rounded-md transition-transform transform hover:scale-105 hover:shadow-xl cursor-pointer ${className}`}
     >
       {children}
     </div>
@@ -69,7 +71,9 @@ function Dash() {
             Bookstore Dashboard
           </h1>
           <div className="flex items-end gap-14">
-            <Button variant="outline">Add Book</Button>
+            <Button variant="outline" onClick={() => navigate("/add")}>
+              Add Book
+            </Button>
             <Button variant="outline" className="p-2 bg-red-400">
               Logout
             </Button>
@@ -90,7 +94,8 @@ function Dash() {
                     {user.books.map((book, index) => (
                       <Card
                         key={index}
-                        className="overflow-hidden cursor-pointer flex flex-col"
+                        className="overflow-hidden flex flex-col"
+                        onClick={() => navigate(`/details/${book.isbn13}`)}
                       >
                         <img
                           src={book.image}
