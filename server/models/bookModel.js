@@ -6,6 +6,11 @@ const reviewSchema = new mongoose.Schema({
 });
 
 const bookSchema = new mongoose.Schema({
+  // Embedding bookSchema in the userSchema
+  userAdded: {
+    type: Boolean,
+    default: false, // Default value if not provided
+  },
   title: String,
   subtitle: String,
   isbn13: String,
@@ -29,11 +34,7 @@ const userSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  books: [bookSchema], // Embedding bookSchema in the userSchema
-  // userAdded: {
-  //   type: Boolean,
-  //   default: false, // Default value if not provided
-  // },
+  books: [bookSchema],
 });
 
 const Main = mongoose.model("Main", userSchema);

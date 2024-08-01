@@ -1,32 +1,22 @@
 import React, { useState, useEffect } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-
-function StarIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-    </svg>
-  );
-}
+import { StarIcon } from "@heroicons/react/solid";
+import { StarIcon as StarIconOutline } from "@heroicons/react/outline";
 
 const BookDetails = () => {
   const { isbn13 } = useParams();
   const [book, setBook] = useState(null);
   const [error, setError] = useState("");
-  const location = useLocation(); // Use useLocation hook
-  const navigate = useNavigate(); // Use useNavigate hook for navigation
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFields, setEditFields] = useState({
+    title: "",
+    subtitle: "",
+    price: "",
+    image: "",
+  });
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBookData = async () => {
@@ -35,6 +25,12 @@ const BookDetails = () => {
           `https://api.itbook.store/1.0/books/${isbn13}`
         );
         setBook(response.data);
+        setEditFields({
+          title: response.data.title,
+          subtitle: response.data.subtitle,
+          price: response.data.price,
+          image: response.data.image,
+        });
       } catch (err) {
         console.error("Error fetching book data:", err);
         setError(err.message);
@@ -46,21 +42,57 @@ const BookDetails = () => {
 
   const handleDelete = async () => {
     try {
-      const email = localStorage.getItem("book-bug"); // Get email from localStorage
-      const currentIsbn13 = isbn13; // Use isbn13 from useParams
+      const email = localStorage.getItem("book-bug");
+      const currentIsbn13 = isbn13;
 
-      // Send DELETE request to backend
       await axios.delete("http://localhost:5000/api/delete-book", {
         data: { email, isbn13: currentIsbn13 },
       });
 
       alert("Book deleted successfully");
-      navigate("/dash"); // Navigate to dashboard
+      navigate("/dash");
     } catch (error) {
       console.error("Error deleting book:", error);
     }
   };
 
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+  };
+
+  const handleChange = (e) => {
+    setEditFields({
+      ...editFields,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleUpdate = async () => {
+    try {
+      const email = localStorage.getItem("book-bug");
+      const currentIsbn13 = isbn13;
+
+      await axios.put("http://localhost:5000/api/update-book", {
+        email,
+        isbn13: currentIsbn13,
+        ...editFields,
+      });
+
+      // Update the book state with the new details
+      setBook({
+        ...book,
+        title: editFields.title,
+        subtitle: editFields.subtitle,
+        price: editFields.price,
+        image: editFields.image,
+      });
+
+      alert("Book updated successfully");
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating book:", error);
+    }
+  };
 
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
@@ -71,7 +103,7 @@ const BookDetails = () => {
           <div className="flex flex-col gap-4">
             <div className="grid gap-4">
               <img
-                src={book.image || "/placeholder.svg"}
+                src={editFields.image || "/placeholder.svg"}
                 alt={book.title}
                 width={400}
                 height={500}
@@ -81,24 +113,71 @@ const BookDetails = () => {
           </div>
           <div className="flex flex-col gap-4">
             <div className="space-y-2 mt-16">
-              <h1 className="text-3xl font-bold">{book.title}</h1>
+              {isEditing ? (
+                <>
+                  <input
+                    type="text"
+                    name="title"
+                    value={editFields.title}
+                    onChange={handleChange}
+                    className="text-3xl font-bold border border-gray-300 rounded-lg p-2"
+                  />
+                  <input
+                    type="text"
+                    name="subtitle"
+                    value={editFields.subtitle}
+                    onChange={handleChange}
+                    className="text-muted-foreground border border-gray-300 rounded-lg p-2"
+                  />
+                  <input
+                    type="text"
+                    name="price"
+                    value={editFields.price}
+                    onChange={handleChange}
+                    className="text-2xl font-bold border border-gray-300 rounded-lg p-2"
+                  />
+                  <input
+                    type="text"
+                    name="image"
+                    value={editFields.image}
+                    onChange={handleChange}
+                    className="text-muted-foreground border border-gray-300 rounded-lg p-2"
+                  />
+                </>
+              ) : (
+                <>
+                  <h1 className="text-3xl font-bold">{book.title}</h1>
+                  <p className="text-muted-foreground">{book.subtitle}</p>
+                  <div className="text-2xl font-bold">{book.price}</div>
+                </>
+              )}
               <p className="text-muted-foreground">By {book.authors}</p>
               <div className="flex items-center gap-2">
                 <StarIcon className="w-5 h-5 fill-black" />
                 <StarIcon className="w-5 h-5 fill-black" />
                 <StarIcon className="w-5 h-5 fill-black" />
                 <StarIcon className="w-5 h-5 fill-black" />
-                <StarIcon className="w-5 h-5" />
+                <StarIconOutline className="w-5 h-5" />
                 <span className="text-muted-foreground">(4.0)</span>
               </div>
             </div>
             <p className="text-muted-foreground">{book.desc}</p>
             <div className="flex items-center justify-between mt-5">
-              <div className="text-2xl font-bold">{book.price}</div>
               <div className="flex gap-4">
-                <button className="bg-blue-500 text-white py-2 px-4 rounded-lg">
-                  Buy Now
+                <button
+                  onClick={handleEditToggle}
+                  className="bg-blue-500 text-white py-2 px-4 rounded-lg"
+                >
+                  {isEditing ? "Cancel" : "Edit"}
                 </button>
+                {isEditing && (
+                  <button
+                    onClick={handleUpdate}
+                    className="bg-green-500 text-white py-2 px-4 rounded-lg"
+                  >
+                    Save
+                  </button>
+                )}
                 <button
                   onClick={handleDelete}
                   className="border border-red-500 text-red-500 py-2 px-4 rounded-lg"
@@ -142,7 +221,7 @@ const BookDetails = () => {
           </div>
         </>
       ) : (
-        <p className="text-gray-600">Loading...</p>
+        <div className="text-center">Loading...</div>
       )}
     </div>
   );

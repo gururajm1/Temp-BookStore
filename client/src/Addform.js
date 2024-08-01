@@ -29,48 +29,54 @@ const Addform = ({
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    const email = localStorage.getItem("book-bug"); // Retrieve email from local storage
+    const email = localStorage.getItem("book-auth"); // Retrieve email from local storage
 
     if (!email) {
-      console.log("No email found in local storage.");
-      return; // Handle missing email scenario
+        console.log("No email found in local storage.");
+        alert("No email found in local storage."); // Alert for missing email
+        return; // Handle missing email scenario
     }
 
     const bookData = {
-      title: values[formattedName("bookName")],
-      subtitle: values[formattedName("subtitle")],
-      isbn13: values[formattedName("uniqueId")],
-      price: values[formattedName("bookPrice")],
-      image: values[formattedName("imageLink")],
-      url: "", // or any other relevant field
-      reviews: [], // if you have reviews, add them here
+        title: values[formattedName("bookName")],
+        subtitle: values[formattedName("subtitle")],
+        isbn13: values[formattedName("uniqueId")],
+        price: values[formattedName("bookPrice")],
+        image: values[formattedName("imageLink")],
+        url: "", // or any other relevant field
+        reviews: [], // if you have reviews, add them here
+        userAdded: true // Set this field to true
     };
 
     try {
-      // Fetch existing user by email
-      const userResponse = await axios.get(`/api/users/${email}`);
-      const user = userResponse.data;
+        // Fetch existing user by email
+        const userResponse = await axios.get(`/api/users/${email}`);
+        const user = userResponse.data;
 
-      if (user) {
-        // Add the new book to the existing books array
-        user.books.push(bookData);
+        if (user) {
+            // Add the new book to the existing books array
+            user.books.push(bookData);
 
-        // Update the user document
-        const updateResponse = await axios.put(`/api/users/${email}`, user);
-        console.log(
-          "Book added to existing user successfully",
-          updateResponse.data
-        );
-        // Handle successful update, e.g., display a success message
-      } else {
-        console.log("User not found");
-        // Handle user not found, e.g., display an error message
-      }
+            // Update the user document
+            const updateResponse = await axios.put(`/api/users/${email}`, user);
+            console.log(
+                "Book added to existing user successfully",
+                updateResponse.data
+            );
+            alert("Book added successfully!"); // Alert on success
+            // Handle successful update, e.g., display a success message
+        } else {
+            console.log("User not found");
+            alert("User not found."); // Alert for user not found
+            // Handle user not found, e.g., display an error message
+        }
     } catch (error) {
-      console.error("Error updating user:", error);
-      // Handle error, e.g., display an error message
+        console.error("Error updating user:", error);
+        alert("Error updating book. Please try again."); // Alert on error
+        // Handle error, e.g., display an error message
     }
-  };
+};
+
 
   return (
     <Box
