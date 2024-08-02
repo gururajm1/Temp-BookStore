@@ -15,40 +15,73 @@ const BookDetails = () => {
     price: "",
     image: "",
   });
+  const [reviewText, setReviewText] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBookData = async () => {
       try {
-        const response = await axios.get(
-          `https://api.itbook.store/1.0/books/${isbn13}`
-        );
-        setBook(response.data);
-        setEditFields({
-          title: response.data.title,
-          subtitle: response.data.subtitle,
-          price: response.data.price,
-          image: response.data.image,
-        });
+        const isAdded = location.pathname.includes("/added");
+        let response;
+
+        if (isAdded) {
+          const email = localStorage.getItem("book-bug");
+          response = await axios.get(
+            `http://localhost:5000/api/users/${email}`
+          );
+          const user = response.data;
+          const userAddedBook = user.books.find(
+            (book) => book.isbn13 === isbn13
+          );
+
+          if (userAddedBook) {
+            setBook({
+              ...userAddedBook,
+              reviews: userAddedBook.reviews || [],
+            });
+            setEditFields({
+              title: userAddedBook.title,
+              subtitle: userAddedBook.subtitle,
+              price: userAddedBook.price,
+              image: userAddedBook.image,
+            });
+            return;
+          }
+          setError("Book not found in user's added books");
+        } else {
+          response = await axios.get(
+            `https://api.itbook.store/1.0/books/${isbn13}`
+          );
+          setBook({
+            ...response.data,
+            reviews: response.data.reviews || [],
+          });
+          setEditFields({
+            title: response.data.title,
+            subtitle: response.data.subtitle,
+            price: response.data.price,
+            image: response.data.image,
+          });
+        }
       } catch (err) {
-        console.error("Error fetching book data:", err);
-        setError(err.message);
+        console.error(
+          "Error fetching book data:",
+          err.response?.data || err.message
+        );
+        setError("Error fetching book data");
       }
     };
 
     fetchBookData();
-  }, [isbn13]);
+  }, [isbn13, location.pathname]);
 
   const handleDelete = async () => {
     try {
       const email = localStorage.getItem("book-bug");
-      const currentIsbn13 = isbn13;
-
       await axios.delete("http://localhost:5000/api/delete-book", {
-        data: { email, isbn13: currentIsbn13 },
+        data: { email, isbn13 },
       });
-
       alert("Book deleted successfully");
       navigate("/dash");
     } catch (error) {
@@ -70,15 +103,12 @@ const BookDetails = () => {
   const handleUpdate = async () => {
     try {
       const email = localStorage.getItem("book-bug");
-      const currentIsbn13 = isbn13;
-
-      await axios.put("http://localhost:5000/api/update-book", {
+      await axios.put("http://localhost:5000/api/add-book", {
         email,
-        isbn13: currentIsbn13,
-        ...editFields,
+        book: { ...editFields, isbn13: book.isbn13 },
+        added: true,
       });
 
-      // Update the book state with the new details
       setBook({
         ...book,
         title: editFields.title,
@@ -94,135 +124,186 @@ const BookDetails = () => {
     }
   };
 
-  if (error) return <div className="text-red-500">Error: {error}</div>;
+
+  const handleReviewChange = (e) => {
+    setReviewText(e.target.value);
+  };
+
+  const handleSubmitReview = async () => {
+    try {
+      const email = localStorage.getItem("book-bug");
+      const response = await axios.get(
+        `http://localhost:5000/api/users/${email}`
+      );
+      const user = response.data;
+      const name = user.name;
+
+      const newReview = {
+        userName: name,
+        reviewText: reviewText,
+      };
+
+      const updatedReviews = [...book.reviews, newReview];
+      setBook((prevBook) => ({
+        ...prevBook,
+        reviews: updatedReviews,
+      }));
+
+      await axios.put("http://localhost:5000/api/update-book", {
+        email,
+        isbn13: book.isbn13,
+        reviews: updatedReviews,
+      });
+
+      setReviewText("");
+      alert("Review submitted successfully");
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      alert("Error submitting review");
+    }
+  };
+
+  if (error) {
+    return <div className="text-center text-red-600">{error}</div>;
+  }
+
+  if (!book) {
+    return <div className="text-center">Loading...</div>;
+  }
 
   return (
-    <div className="grid md:grid-cols-[1fr_400px] gap-1 p-4 md:p-8 max-w-6xl mx-auto">
-      {book ? (
-        <>
-          <div className="flex flex-col gap-4">
-            <div className="grid gap-4">
-              <img
-                src={editFields.image || "/placeholder.svg"}
-                alt={book.title}
-                width={400}
-                height={500}
-                className="rounded-lg shadow-lg object-cover mt-20 transition-transform transform hover:scale-105 cursor-pointer fixed"
+    <div className="p-4 max-w-4xl mx-auto mt-8 shadow-md rounded-lg bg-white">
+      <div className="flex flex-col md:flex-row items-center">
+        <img
+          className="w-full md:w-1/3 rounded-lg shadow-lg mb-4 md:mb-0 md:mr-4"
+          src={book.image}
+          alt={book.title}
+        />
+        <div className="w-full md:w-2/3">
+          {isEditing ? (
+            <>
+              <input
+                type="text"
+                name="title"
+                value={editFields.title}
+                onChange={handleChange}
+                className="block w-full mb-2 p-2 border border-gray-300 rounded"
               />
-            </div>
+              <input
+                type="text"
+                name="subtitle"
+                value={editFields.subtitle}
+                onChange={handleChange}
+                className="block w-full mb-2 p-2 border border-gray-300 rounded"
+              />
+              <input
+                type="text"
+                name="price"
+                value={editFields.price}
+                onChange={handleChange}
+                className="block w-full mb-2 p-2 border border-gray-300 rounded"
+              />
+              <input
+                type="text"
+                name="image"
+                value={editFields.image}
+                onChange={handleChange}
+                className="block w-full mb-2 p-2 border border-gray-300 rounded"
+              />
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold mb-2">{book.title}</h1>
+              <h2 className="text-xl text-gray-600 mb-2">{book.subtitle}</h2>
+              <p className="text-lg text-blue-600 mb-4">{book.price}</p>
+            </>
+          )}
+          <p className="text-gray-600 mb-4">{book.desc}</p>
+          <div className="mb-4">
+            <span className="font-bold">Authors: </span>
+            {book.authors}
           </div>
-          <div className="flex flex-col gap-4">
-            <div className="space-y-2 mt-16">
-              {isEditing ? (
-                <>
-                  <input
-                    type="text"
-                    name="title"
-                    value={editFields.title}
-                    onChange={handleChange}
-                    className="text-3xl font-bold border border-gray-300 rounded-lg p-2"
-                  />
-                  <input
-                    type="text"
-                    name="subtitle"
-                    value={editFields.subtitle}
-                    onChange={handleChange}
-                    className="text-muted-foreground border border-gray-300 rounded-lg p-2"
-                  />
-                  <input
-                    type="text"
-                    name="price"
-                    value={editFields.price}
-                    onChange={handleChange}
-                    className="text-2xl font-bold border border-gray-300 rounded-lg p-2"
-                  />
-                  <input
-                    type="text"
-                    name="image"
-                    value={editFields.image}
-                    onChange={handleChange}
-                    className="text-muted-foreground border border-gray-300 rounded-lg p-2"
-                  />
-                </>
-              ) : (
-                <>
-                  <h1 className="text-3xl font-bold">{book.title}</h1>
-                  <p className="text-muted-foreground">{book.subtitle}</p>
-                  <div className="text-2xl font-bold">{book.price}</div>
-                </>
-              )}
-              <p className="text-muted-foreground">By {book.authors}</p>
-              <div className="flex items-center gap-2">
-                <StarIcon className="w-5 h-5 fill-black" />
-                <StarIcon className="w-5 h-5 fill-black" />
-                <StarIcon className="w-5 h-5 fill-black" />
-                <StarIcon className="w-5 h-5 fill-black" />
-                <StarIconOutline className="w-5 h-5" />
-                <span className="text-muted-foreground">(4.0)</span>
-              </div>
-            </div>
-            <p className="text-muted-foreground">{book.desc}</p>
-            <div className="flex items-center justify-between mt-5">
-              <div className="flex gap-4">
-                <button
-                  onClick={handleEditToggle}
-                  className="bg-blue-500 text-white py-2 px-4 rounded-lg"
-                >
-                  {isEditing ? "Cancel" : "Edit"}
-                </button>
-                {isEditing && (
-                  <button
-                    onClick={handleUpdate}
-                    className="bg-green-500 text-white py-2 px-4 rounded-lg"
-                  >
-                    Save
-                  </button>
-                )}
-                <button
-                  onClick={handleDelete}
-                  className="border border-red-500 text-red-500 py-2 px-4 rounded-lg"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-            <div className="grid gap-4">
-              <div className="mt-7">
-                <h2 className="text-xl font-bold mb-2">Description</h2>
-                <p className="text-muted-foreground">{book.desc}</p>
-              </div>
-              <div>
-                <h2 className="text-xl font-bold mb-3 mt-3">Details</h2>
-                <ul className="grid gap-2 text-muted-foreground">
-                  <li>
-                    <span className="font-medium">Publisher:</span>{" "}
-                    {book.publisher}
-                  </li>
-                  <li>
-                    <span className="font-medium">Publication Date:</span>{" "}
-                    {book.publishedDate}
-                  </li>
-                  <li>
-                    <span className="font-medium">Language:</span> English
-                  </li>
-                  <li>
-                    <span className="font-medium">Paperback:</span> {book.pages}{" "}
-                    pages
-                  </li>
-                  <li>
-                    <span className="font-medium">ISBN-10:</span> {book.isbn10}
-                  </li>
-                  <li>
-                    <span className="font-medium">ISBN-13:</span> {book.isbn13}
-                  </li>
-                </ul>
+          <div className="mb-4">
+            <span className="font-bold">Publisher: </span>
+            {book.publisher}
+          </div>
+          <div className="mb-4">
+            <span className="font-bold">Year: </span>
+            {book.year}
+          </div>
+          <div className="mb-4">
+            <span className="font-bold">Pages: </span>
+            {book.pages}
+          </div>
+          <div className="mb-4">
+            <span className="font-bold">Language: </span>
+            {book.language}
+          </div>
+          <div className="mb-4">
+            <div className="flex items-center">
+              <span className="font-bold">Rating: </span>
+              <div className="flex ml-2">
+                {Array(5)
+                  .fill(0)
+                  .map((_, i) => (
+                    <span key={i}>
+                      {i < book.rating ? (
+                        <StarIcon className="h-5 w-5 text-yellow-400" />
+                      ) : (
+                        <StarIconOutline className="h-5 w-5 text-gray-400" />
+                      )}
+                    </span>
+                  ))}
               </div>
             </div>
           </div>
-        </>
-      ) : (
-        <div className="text-center">Loading...</div>
-      )}
+          <div className="mb-4">
+            <span className="font-bold">Reviews: </span>
+            {book.reviews.length > 0 ? (
+              <ul className="list-disc list-inside">
+                {book.reviews.map((review, index) => (
+                  <li key={index} className="mb-2">
+                    <span className="font-bold">{review.userName}:</span>{" "}
+                    {review.reviewText}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No reviews yet</p>
+            )}
+          </div>
+          <div className="mt-4">
+            <textarea
+              className="w-full p-2 border border-gray-300 rounded mb-2"
+              placeholder="Write your review here..."
+              value={reviewText}
+              onChange={handleReviewChange}
+            ></textarea>
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              onClick={handleSubmitReview}
+            >
+              Submit Review
+            </button>
+          </div>
+          {location.pathname.includes("/added") && (
+            <div className="mt-4 flex justify-end">
+              <button
+                className="bg-red-500 text-white px-4 py-2 rounded mr-2 hover:bg-red-600"
+                onClick={handleDelete}
+              >
+                Delete Book
+              </button>
+              <button
+                className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+                onClick={isEditing ? handleUpdate : handleEditToggle}
+              >
+                {isEditing ? "Save" : "Edit"}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

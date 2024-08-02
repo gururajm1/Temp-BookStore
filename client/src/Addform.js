@@ -1,234 +1,213 @@
-import React from "react";
-import { Box, useMediaQuery, TextField } from "@mui/material";
-import { getIn } from "formik";
+import React, { useState } from "react";
+import { Box, TextField } from "@mui/material";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-const Addform = ({
-  type,
-  values = {},
-  errors = {},
-  touched = {},
-  handleBlur,
-  handleChange,
-  handleSubmit,
-  setFieldValue,
-}) => {
-  const isNonMobile = useMediaQuery("(min-width: 600px)");
+const Addform = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    bookName: "",
+    authorName: "",
+    subtitle: "",
+    description: "",
+    bookPrice: "",
+    publisher: "",
+    publicationYear: "",
+    pages: "",
+    imageLink: "",
+    uniqueId: "",
+    language: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const formattedName = (field) => `${type}.${field}`;
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
-  const formattedError = (field) =>
-    Boolean(
-      getIn(touched, formattedName(field)) &&
-        getIn(errors, formattedName(field))
-    );
-
-  const formattedHelper = (field) =>
-    getIn(touched, formattedName(field)) && getIn(errors, formattedName(field));
-
-  const handleFormSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const email = localStorage.getItem("book-auth"); // Retrieve email from local storage
-
-    if (!email) {
-        console.log("No email found in local storage.");
-        alert("No email found in local storage."); // Alert for missing email
-        return; // Handle missing email scenario
-    }
-
-    const bookData = {
-        title: values[formattedName("bookName")],
-        subtitle: values[formattedName("subtitle")],
-        isbn13: values[formattedName("uniqueId")],
-        price: values[formattedName("bookPrice")],
-        image: values[formattedName("imageLink")],
-        url: "", // or any other relevant field
-        reviews: [], // if you have reviews, add them here
-        userAdded: true // Set this field to true
-    };
-
+    setIsSubmitting(true);
     try {
-        // Fetch existing user by email
-        const userResponse = await axios.get(`/api/users/${email}`);
-        const user = userResponse.data;
+      console.log(formData);
+      const email = localStorage.getItem("book-bug"); // Retrieve email from localStorage
 
-        if (user) {
-            // Add the new book to the existing books array
-            user.books.push(bookData);
+      if (!email) {
+        throw new Error("User email not found");
+      }
 
-            // Update the user document
-            const updateResponse = await axios.put(`/api/users/${email}`, user);
-            console.log(
-                "Book added to existing user successfully",
-                updateResponse.data
-            );
-            alert("Book added successfully!"); // Alert on success
-            // Handle successful update, e.g., display a success message
-        } else {
-            console.log("User not found");
-            alert("User not found."); // Alert for user not found
-            // Handle user not found, e.g., display an error message
-        }
+      const response = await axios.post("http://localhost:5000/api/add-book", {
+        email,
+        bookData: formData,
+      });
+
+      console.log("Form submitted successfully:", response.data);
+      window.alert("Book data added successfully!");
+      navigate("/dash");
     } catch (error) {
-        console.error("Error updating user:", error);
-        alert("Error updating book. Please try again."); // Alert on error
-        // Handle error, e.g., display an error message
+      console.error("Error submitting form:", error);
+      window.alert("Error submitting form. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-};
-
+  };
 
   return (
     <Box
       component="form"
-      onSubmit={handleFormSubmit}
+      onSubmit={handleSubmit}
       display="grid"
-      marginX="70px"
-      marginTop="90px"
+      margin="0 auto"
+      padding="20px"
+      maxWidth="600px"
       gap="15px"
-      gridTemplateColumns={isNonMobile ? "repeat(4, 1fr)" : "repeat(1, 1fr)"}
+      gridTemplateColumns="1fr"
       sx={{
         "& .MuiTextField-root": { width: "100%" },
+        overflow: "hidden",
       }}
     >
       <TextField
-        fullWidth
         type="text"
         label="Book Name"
-        onBlur={handleBlur}
         onChange={handleChange}
-        name={formattedName("bookName")}
-        error={formattedError("bookName")}
-        helperText={formattedHelper("bookName")}
-        sx={{ gridColumn: "span 2", width: "90%" }}
+        name="bookName"
+        value={formData.bookName}
+        sx={{
+          width: "90%",
+          "& .MuiInputBase-root": { height: 40 },
+          "& .MuiInputBase-input": { fontSize: "0.875rem" },
+        }}
       />
-
       <TextField
-        fullWidth
         type="text"
         label="Author Name"
-        onBlur={handleBlur}
         onChange={handleChange}
-        name={formattedName("authorName")}
-        error={formattedError("authorName")}
-        helperText={formattedHelper("authorName")}
-        sx={{ gridColumn: "span 2", width: "90%" }}
+        name="authorName"
+        value={formData.authorName}
+        sx={{
+          width: "90%",
+          "& .MuiInputBase-root": { height: 40 },
+          "& .MuiInputBase-input": { fontSize: "0.875rem" },
+        }}
       />
-
       <TextField
-        fullWidth
         type="text"
         label="Subtitle"
-        onBlur={handleBlur}
         onChange={handleChange}
-        name={formattedName("subtitle")}
-        error={formattedError("subtitle")}
-        helperText={formattedHelper("subtitle")}
-        sx={{ gridColumn: "span 4", width: "90%" }}
+        name="subtitle"
+        value={formData.subtitle}
+        sx={{
+          width: "90%",
+          "& .MuiInputBase-root": { height: 40 },
+          "& .MuiInputBase-input": { fontSize: "0.875rem" },
+        }}
       />
-
       <TextField
-        fullWidth
         type="text"
         label="Description"
-        onBlur={handleBlur}
         onChange={handleChange}
-        name={formattedName("description")}
-        error={formattedError("description")}
-        helperText={formattedHelper("description")}
-        sx={{ gridColumn: "span 4", width: "90%" }}
+        name="description"
+        value={formData.description}
+        sx={{
+          width: "90%",
+          "& .MuiInputBase-root": { height: 40 },
+          "& .MuiInputBase-input": { fontSize: "0.875rem" },
+        }}
       />
-
       <TextField
-        fullWidth
         type="number"
         label="Book Price"
-        onBlur={handleBlur}
         onChange={handleChange}
-        name={formattedName("bookPrice")}
-        error={formattedError("bookPrice")}
-        helperText={formattedHelper("bookPrice")}
-        sx={{ gridColumn: "span 2", width: "90%" }}
+        name="bookPrice"
+        value={formData.bookPrice}
+        sx={{
+          width: "90%",
+          "& .MuiInputBase-root": { height: 40 },
+          "& .MuiInputBase-input": { fontSize: "0.875rem" },
+        }}
       />
-
       <TextField
-        fullWidth
         type="text"
         label="Publisher"
-        onBlur={handleBlur}
         onChange={handleChange}
-        name={formattedName("publisher")}
-        error={formattedError("publisher")}
-        helperText={formattedHelper("publisher")}
-        sx={{ gridColumn: "span 2", width: "90%" }}
+        name="publisher"
+        value={formData.publisher}
+        sx={{
+          width: "90%",
+          "& .MuiInputBase-root": { height: 40 },
+          "& .MuiInputBase-input": { fontSize: "0.875rem" },
+        }}
       />
-
       <TextField
-        fullWidth
         type="number"
         label="Publication Year"
-        onBlur={handleBlur}
         onChange={handleChange}
-        name={formattedName("publicationYear")}
-        value={values[formattedName("publicationYear")]} // Ensure this value is controlled
-        error={formattedError("publicationYear")}
-        helperText={formattedHelper("publicationYear")}
-        sx={{ gridColumn: "span 2", width: "90%" }}
+        name="publicationYear"
+        value={formData.publicationYear}
+        sx={{
+          width: "90%",
+          "& .MuiInputBase-root": { height: 40 },
+          "& .MuiInputBase-input": { fontSize: "0.875rem" },
+        }}
       />
-
       <TextField
-        fullWidth
         type="number"
         label="Pages"
-        onBlur={handleBlur}
         onChange={handleChange}
-        name={formattedName("pages")}
-        error={formattedError("pages")}
-        helperText={formattedHelper("pages")}
-        sx={{ gridColumn: "span 2", width: "90%" }}
+        name="pages"
+        value={formData.pages}
+        sx={{
+          width: "90%",
+          "& .MuiInputBase-root": { height: 40 },
+          "& .MuiInputBase-input": { fontSize: "0.875rem" },
+        }}
       />
-
       <TextField
-        fullWidth
         type="text"
         label="Image Link"
-        onBlur={handleBlur}
         onChange={handleChange}
-        name={formattedName("imageLink")}
-        error={formattedError("imageLink")}
-        helperText={formattedHelper("imageLink")}
-        sx={{ gridColumn: "span 2", width: "90%" }}
+        name="imageLink"
+        value={formData.imageLink}
+        sx={{
+          width: "90%",
+          "& .MuiInputBase-root": { height: 40 },
+          "& .MuiInputBase-input": { fontSize: "0.875rem" },
+        }}
       />
-
       <TextField
-        fullWidth
         type="text"
         label="Unique Id (ISBN-13)"
-        onBlur={handleBlur}
         onChange={handleChange}
-        name={formattedName("uniqueId")}
-        error={formattedError("uniqueId")}
-        helperText={formattedHelper("uniqueId")}
-        sx={{ gridColumn: "span 2", width: "90%" }}
+        name="uniqueId"
+        value={formData.uniqueId}
+        sx={{
+          width: "90%",
+          "& .MuiInputBase-root": { height: 40 },
+          "& .MuiInputBase-input": { fontSize: "0.875rem" },
+        }}
       />
-
       <TextField
-        fullWidth
         type="text"
         label="Language"
-        onBlur={handleBlur}
         onChange={handleChange}
-        name={formattedName("language")}
-        error={formattedError("language")}
-        helperText={formattedHelper("language")}
-        sx={{ gridColumn: "span 4", width: "90%" }}
+        name="language"
+        value={formData.language}
+        sx={{
+          width: "90%",
+          "& .MuiInputBase-root": { height: 40 },
+          "& .MuiInputBase-input": { fontSize: "0.875rem" },
+        }}
       />
 
       <button
         type="submit"
-        className="mt-6 col-span-4 px-4 py-3 bg-zinc-800 text-white font-bold rounded hover:bg-gray-700 transition duration-300 ease-in-out"
+        className={`mt-6 px-4 py-3 bg-zinc-800 text-white font-bold rounded hover:bg-gray-700 transition duration-300 ease-in-out ${
+          isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+        disabled={isSubmitting}
       >
-        Add Data
+        {isSubmitting ? "Submitting..." : "Add Data"}
       </button>
     </Box>
   );

@@ -1,15 +1,31 @@
-// models/userModel.js
 const mongoose = require("mongoose");
 
 const reviewSchema = new mongoose.Schema({
-  reviewDesc: String,
+  by: {
+    type: String,
+    default: "John",
+  },
+  text: {
+    type: String,
+    default: "Doe",
+  },
+});
+
+const userReviewSchema = new mongoose.Schema({
+  by: {
+    type: String,
+    default: "John",
+  },
+  text: {
+    type: String,
+    default: "Doe",
+  },
 });
 
 const bookSchema = new mongoose.Schema({
-  // Embedding bookSchema in the userSchema
   userAdded: {
     type: Boolean,
-    default: false, // Default value if not provided
+    default: false,
   },
   title: String,
   subtitle: String,
@@ -19,6 +35,31 @@ const bookSchema = new mongoose.Schema({
   url: String,
   reviews: [reviewSchema],
 });
+
+const userAdded = new mongoose.Schema({
+  name: String,
+  author: String,
+  subtitle: String,
+  desc: String,
+  price: Number,
+  publisher: String,
+  year: Number,
+  pages: Number,
+  url: String,
+  isbn13: String,
+  language: String,
+  reviews: [userReviewSchema],
+});
+
+// const userAdded = new mongoose.Schema({
+//     title: String,
+//     subtitle: String,
+//     isbn13: Number,
+//     price: Number,
+//     image: String,
+//     authors:
+//     reviews: [reviewSchema],
+// })
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -35,6 +76,7 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   books: [bookSchema],
+  added: [userAdded],
 });
 
 const Main = mongoose.model("Main", userSchema);

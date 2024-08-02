@@ -16,6 +16,7 @@ function App() {
         <Route path="/add" element={<Addform />} />
         <Route path="/details/:isbn13" element={<Bookdetails />} />
         <Route path="/dash" element={<Dash />} />
+        <Route path="/details/added/:isbn13" element={<Bookdetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/details:id" element={<Details />} />
