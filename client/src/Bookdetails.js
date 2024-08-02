@@ -17,11 +17,12 @@ const BookDetails = () => {
     price: "",
     image: "",
   });
+  const [review, setReview] = useState("");
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     const fetchBookData = async () => {
       if (location.pathname.includes("/added")) {
-        // Fetch the user and check the added books
         const email = localStorage.getItem("book-bug");
         try {
           const userResponse = await axios.get(
@@ -38,6 +39,7 @@ const BookDetails = () => {
               price: addedBook.price,
               image: addedBook.image,
             });
+            setReviews(addedBook.reviews || []);
           } else {
             setError("Book not found in the added list.");
           }
@@ -46,7 +48,6 @@ const BookDetails = () => {
           setError(err.message);
         }
       } else {
-        // Fetch book data from the API
         try {
           const response = await axios.get(
             `https://api.itbook.store/1.0/books/${isbn13}`
@@ -114,6 +115,32 @@ const BookDetails = () => {
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating book:", error);
+    }
+  };
+
+  const handleReviewSubmit = async () => {
+    if (!review) return;
+    try {
+      const email = localStorage.getItem("book-bug");
+      const userResponse = await axios.get(
+        `http://localhost:5000/api/users/${email}`
+      );
+      const user = userResponse.data;
+      const newReview = {
+        by: user.name,
+        text: review,
+      };
+
+      await axios.post("http://localhost:5000/api/add-review", {
+        email,
+        isbn13,
+        review: newReview,
+      });
+
+      setReviews([...reviews, newReview]);
+      setReview("");
+    } catch (error) {
+      console.error("Error submitting review:", error);
     }
   };
 
@@ -240,6 +267,37 @@ const BookDetails = () => {
                   </li>
                 </ul>
               </div>
+            </div>
+            <div className="mt-5">
+              <h2 className="text-xl font-bold mb-2">Reviews</h2>
+              {reviews.length > 0 ? (
+                <ul className="space-y-2">
+                  {reviews.map((review, index) => (
+                    <li
+                      key={index}
+                      className="border border-gray-300 p-2 rounded-lg"
+                    >
+                      <p className="font-medium">By {review.by}</p>
+                      <p>{review.text}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-muted-foreground">No reviews yet.</p>
+              )}
+              <textarea
+                className="border border-gray-300 rounded-lg p-2 mt-3 w-full"
+                rows="3"
+                placeholder="Write your review..."
+                value={review}
+                onChange={(e) => setReview(e.target.value)}
+              />
+              <button
+                onClick={handleReviewSubmit}
+                className="bg-blue-500 text-white py-2 px-4 rounded-lg mt-2"
+              >
+                Submit Review
+              </button>
             </div>
           </div>
         </>
