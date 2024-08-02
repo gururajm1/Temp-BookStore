@@ -142,7 +142,7 @@ function Dash() {
                           <Card
                             key={index}
                             className="overflow-hidden flex flex-col"
-                            onClick={() => navigate(`/details/added/${book.isbn}`)}
+                            onClick={() => navigate(`/details/added/${book.isbn13}`)}
                           >
                             <img
                               src={book.url}

@@ -244,7 +244,7 @@ exports.addBook = async (req, res) => {
     }
 
     const existingBook = user.added.find(
-      (book) => book.isbn === bookData.uniqueId
+      (book) => book.isbn13 === bookData.isbn13 // Ensure this matches the schema field
     );
 
     if (existingBook) {
@@ -258,6 +258,7 @@ exports.addBook = async (req, res) => {
         year: bookData.publicationYear,
         pages: bookData.pages,
         url: bookData.imageLink,
+        isbn13: bookData.isbn13,
         language: bookData.language,
       });
     } else {
@@ -271,7 +272,7 @@ exports.addBook = async (req, res) => {
         year: bookData.publicationYear,
         pages: bookData.pages,
         url: bookData.imageLink,
-        isbn: bookData.uniqueId,
+        isbn13: bookData.isbn13, // Ensure this matches the schema field
         language: bookData.language,
       });
     }
@@ -283,6 +284,7 @@ exports.addBook = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 

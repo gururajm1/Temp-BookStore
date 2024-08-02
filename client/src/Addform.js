@@ -15,7 +15,7 @@ const Addform = () => {
     publicationYear: "",
     pages: "",
     imageLink: "",
-    uniqueId: "",
+    isbn13: "", // Ensure this matches the field in the form
     language: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,7 +30,7 @@ const Addform = () => {
     setIsSubmitting(true);
     try {
       console.log(formData);
-      const email = localStorage.getItem("book-bug"); // Retrieve email from localStorage
+      const email = localStorage.getItem("book-bug");
 
       if (!email) {
         throw new Error("User email not found");
@@ -73,11 +73,6 @@ const Addform = () => {
         onChange={handleChange}
         name="bookName"
         value={formData.bookName}
-        sx={{
-          width: "90%",
-          "& .MuiInputBase-root": { height: 40 },
-          "& .MuiInputBase-input": { fontSize: "0.875rem" },
-        }}
       />
       <TextField
         type="text"
@@ -85,11 +80,6 @@ const Addform = () => {
         onChange={handleChange}
         name="authorName"
         value={formData.authorName}
-        sx={{
-          width: "90%",
-          "& .MuiInputBase-root": { height: 40 },
-          "& .MuiInputBase-input": { fontSize: "0.875rem" },
-        }}
       />
       <TextField
         type="text"
@@ -97,11 +87,6 @@ const Addform = () => {
         onChange={handleChange}
         name="subtitle"
         value={formData.subtitle}
-        sx={{
-          width: "90%",
-          "& .MuiInputBase-root": { height: 40 },
-          "& .MuiInputBase-input": { fontSize: "0.875rem" },
-        }}
       />
       <TextField
         type="text"
@@ -109,11 +94,6 @@ const Addform = () => {
         onChange={handleChange}
         name="description"
         value={formData.description}
-        sx={{
-          width: "90%",
-          "& .MuiInputBase-root": { height: 40 },
-          "& .MuiInputBase-input": { fontSize: "0.875rem" },
-        }}
       />
       <TextField
         type="number"
@@ -121,11 +101,6 @@ const Addform = () => {
         onChange={handleChange}
         name="bookPrice"
         value={formData.bookPrice}
-        sx={{
-          width: "90%",
-          "& .MuiInputBase-root": { height: 40 },
-          "& .MuiInputBase-input": { fontSize: "0.875rem" },
-        }}
       />
       <TextField
         type="text"
@@ -133,11 +108,6 @@ const Addform = () => {
         onChange={handleChange}
         name="publisher"
         value={formData.publisher}
-        sx={{
-          width: "90%",
-          "& .MuiInputBase-root": { height: 40 },
-          "& .MuiInputBase-input": { fontSize: "0.875rem" },
-        }}
       />
       <TextField
         type="number"
@@ -145,11 +115,6 @@ const Addform = () => {
         onChange={handleChange}
         name="publicationYear"
         value={formData.publicationYear}
-        sx={{
-          width: "90%",
-          "& .MuiInputBase-root": { height: 40 },
-          "& .MuiInputBase-input": { fontSize: "0.875rem" },
-        }}
       />
       <TextField
         type="number"
@@ -157,11 +122,6 @@ const Addform = () => {
         onChange={handleChange}
         name="pages"
         value={formData.pages}
-        sx={{
-          width: "90%",
-          "& .MuiInputBase-root": { height: 40 },
-          "& .MuiInputBase-input": { fontSize: "0.875rem" },
-        }}
       />
       <TextField
         type="text"
@@ -169,35 +129,21 @@ const Addform = () => {
         onChange={handleChange}
         name="imageLink"
         value={formData.imageLink}
-        sx={{
-          width: "90%",
-          "& .MuiInputBase-root": { height: 40 },
-          "& .MuiInputBase-input": { fontSize: "0.875rem" },
-        }}
       />
       <TextField
         type="text"
         label="Unique Id (ISBN-13)"
         onChange={handleChange}
-        name="uniqueId"
-        value={formData.uniqueId}
-        sx={{
-          width: "90%",
-          "& .MuiInputBase-root": { height: 40 },
-          "& .MuiInputBase-input": { fontSize: "0.875rem" },
-        }}
+        name="isbn13" // Correct field name in formData
+        value={formData.isbn13} // Correct field name in formData
       />
+
       <TextField
         type="text"
         label="Language"
         onChange={handleChange}
         name="language"
         value={formData.language}
-        sx={{
-          width: "90%",
-          "& .MuiInputBase-root": { height: 40 },
-          "& .MuiInputBase-input": { fontSize: "0.875rem" },
-        }}
       />
 
       <button

@@ -1,25 +1,8 @@
 const mongoose = require("mongoose");
 
 const reviewSchema = new mongoose.Schema({
-  by: {
-    type: String,
-    default: "John",
-  },
-  text: {
-    type: String,
-    default: "Doe",
-  },
-});
-
-const userReviewSchema = new mongoose.Schema({
-  by: {
-    type: String,
-    default: "John",
-  },
-  text: {
-    type: String,
-    default: "Doe",
-  },
+  by: String,
+  msg: String,
 });
 
 const bookSchema = new mongoose.Schema({
@@ -33,7 +16,10 @@ const bookSchema = new mongoose.Schema({
   price: String,
   image: String,
   url: String,
-  reviews: [reviewSchema],
+  reviews: {
+    type: [reviewSchema],
+    default: [],
+  },
 });
 
 const userAdded = new mongoose.Schema({
@@ -48,18 +34,11 @@ const userAdded = new mongoose.Schema({
   url: String,
   isbn13: String,
   language: String,
-  reviews: [userReviewSchema],
+  reviews: {
+    type: [reviewSchema],
+    default: [],
+  },
 });
-
-// const userAdded = new mongoose.Schema({
-//     title: String,
-//     subtitle: String,
-//     isbn13: Number,
-//     price: Number,
-//     image: String,
-//     authors:
-//     reviews: [reviewSchema],
-// })
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -75,8 +54,18 @@ const userSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  books: [bookSchema],
-  added: [userAdded],
+  books: {
+    type: [bookSchema],
+    default: [],
+  },
+  added: {
+    type: [userAdded],
+    default: [],
+  },
+  reviews: {
+    type: [reviewSchema],
+    default: [],
+  },
 });
 
 const Main = mongoose.model("Main", userSchema);
