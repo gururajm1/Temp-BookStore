@@ -52,6 +52,7 @@ exports.getUserByEmail = async (req, res) => {
 };
 
 
+
 exports.signUpUser = async (req, res) => {
   try {
     const { name, email, age, books } = req.body;
@@ -375,6 +376,66 @@ const addUserAddedBookToBooksArray = async (req, res) => {
       .json({ message: "Book added to user's books array successfully" });
   } catch (error) {
     console.error("Error adding book:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+exports.addReview = async (req, res) => {
+  try {
+    const { email, isbn13, review } = req.body;
+
+    if (!email || !isbn13 || !review || !review.by || !review.text) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // Find the user with the given email
+    const user = await Main.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Find the book with the given ISBN
+    const book = user.books.find((book) => book.isbn13 === isbn13);
+    if (!book) {
+      return res
+        .status(404)
+        .json({ message: "Book not found in user's collection" });
+    }
+
+    // Add the review to the book's reviews array
+    book.reviews.push(review);
+    await user.save();
+
+    res.status(200).json({ message: "Review added successfully", book });
+  } catch (error) {
+    console.error("Error adding review:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getBookReviews = async (req, res) => {
+  try {
+    const { isbn13 } = req.params;
+
+    // Find the user with the book having the given ISBN
+    const user = await Main.findOne({ "books.isbn13": isbn13 });
+    if (!user) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    // Find the book and its reviews
+    const book = user.books.find((book) => book.isbn13 === isbn13);
+    if (!book) {
+      return res
+        .status(404)
+        .json({ message: "Book not found in user's collection" });
+    }
+
+    res.status(200).json({ reviews: book.reviews });
+  } catch (error) {
+    console.error("Error retrieving reviews:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

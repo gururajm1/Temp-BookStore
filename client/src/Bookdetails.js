@@ -20,26 +20,35 @@ const BookDetails = () => {
   const [review, setReview] = useState("");
   const [reviews, setReviews] = useState([]);
 
+  const isAddedPath = location.pathname.includes("/added");
+
   useEffect(() => {
     const fetchBookData = async () => {
       try {
-        if (location.pathname.includes("/added")) {
+        let bookData;
+        if (isAddedPath) {
           const email = localStorage.getItem("book-bug");
           const userResponse = await axios.get(
-            `http://localhost:5000/api/users/${email}`
+            `http://localhost:7001/api/users/${email}`
           );
           const user = userResponse.data;
-          const addedBook = user.added.find((b) => b.isbn13 === isbn13);
 
-          if (addedBook) {
-            setBook(addedBook);
+          bookData = user.added.find((b) => b.isbn13 === isbn13);
+          if (bookData) {
+            setBook(bookData);
             setEditFields({
-              title: addedBook.name, // Use 'name' instead of 'title'
-              subtitle: addedBook.subtitle,
-              price: addedBook.price,
-              image: addedBook.image,
+              title: bookData.title,
+              subtitle: bookData.subtitle,
+              price: bookData.price,
+              image: bookData.image,
             });
-            setReviews(addedBook.reviews || []);
+
+            const storedReviews =
+              JSON.parse(localStorage.getItem("book-reviews")) || [];
+            const filteredReviews = storedReviews.filter(
+              (review) => review.isbn13 === isbn13
+            );
+            setReviews(filteredReviews);
           } else {
             setError("Book not found in the added list.");
           }
@@ -47,13 +56,21 @@ const BookDetails = () => {
           const response = await axios.get(
             `https://api.itbook.store/1.0/books/${isbn13}`
           );
-          setBook(response.data);
+          bookData = response.data;
+          setBook(bookData);
           setEditFields({
-            title: response.data.title,
-            subtitle: response.data.subtitle,
-            price: response.data.price,
-            image: response.data.image,
+            title: bookData.title,
+            subtitle: bookData.subtitle,
+            price: bookData.price,
+            image: bookData.image,
           });
+
+          const storedReviews =
+            JSON.parse(localStorage.getItem("book-reviews")) || [];
+          const filteredReviews = storedReviews.filter(
+            (review) => review.isbn13 === isbn13
+          );
+          setReviews(filteredReviews);
         }
       } catch (err) {
         console.error("Error fetching book data:", err);
@@ -67,7 +84,7 @@ const BookDetails = () => {
   const handleDelete = async () => {
     try {
       const email = localStorage.getItem("book-bug");
-      await axios.delete("http://localhost:5000/api/delete-book", {
+      await axios.delete("http://localhost:7001/api/delete-book", {
         data: { email, isbn13 },
       });
 
@@ -92,9 +109,9 @@ const BookDetails = () => {
   const handleUpdate = async () => {
     try {
       const email = localStorage.getItem("book-bug");
-      const url = location.pathname.includes("/added")
-        ? "http://localhost:5000/api/added-update"
-        : "http://localhost:5000/api/update-book";
+      const url = isAddedPath
+        ? "http://localhost:7001/api/added-update"
+        : "http://localhost:7001/api/update-book";
 
       await axios.put(url, {
         email,
@@ -104,10 +121,7 @@ const BookDetails = () => {
 
       setBook({
         ...book,
-        title: editFields.title,
-        subtitle: editFields.subtitle,
-        price: editFields.price,
-        image: editFields.image,
+        ...editFields,
       });
 
       alert("Book updated successfully");
@@ -118,30 +132,22 @@ const BookDetails = () => {
     }
   };
 
-  const handleReviewSubmit = async () => {
+  const handleReviewSubmit = () => {
     if (!review) return;
-    try {
-      const email = localStorage.getItem("book-bug");
-      const userResponse = await axios.get(
-        `http://localhost:5000/api/users/${email}`
-      );
-      const user = userResponse.data;
-      const newReview = {
-        by: user.name,
-        text: review,
-      };
 
-      await axios.post("http://localhost:5000/api/add-review", {
-        email,
-        isbn13,
-        review: newReview,
-      });
+    const newReview = {
+      isbn13,
+      by: localStorage.getItem("book-bug"),
+      text: review,
+    };
 
-      setReviews([...reviews, newReview]);
-      setReview("");
-    } catch (error) {
-      console.error("Error submitting review:", error);
-    }
+    const storedReviews =
+      JSON.parse(localStorage.getItem("book-reviews")) || [];
+    storedReviews.push(newReview);
+    localStorage.setItem("book-reviews", JSON.stringify(storedReviews));
+
+    setReviews([...reviews, newReview]);
+    setReview("");
   };
 
   if (error) return <div className="text-red-500">Error: {error}</div>;
@@ -154,10 +160,10 @@ const BookDetails = () => {
             <div className="grid gap-4">
               <img
                 src={editFields.image || "/placeholder.svg"}
-                alt={editFields.title} // Use 'title' from editFields
+                alt={editFields.title}
                 width={400}
                 height={500}
-                className="rounded-lg shadow-lg object-cover mt-20 transition-transform transform hover:scale-105 cursor-pointer"
+                className="rounded-lg shadow-lg object-cover mt-20 transition-transform transform hover:scale-105 cursor-pointer hidden md:block lg:mx-0 lg:fixed"
               />
             </div>
           </div>
@@ -168,7 +174,7 @@ const BookDetails = () => {
                   <input
                     type="text"
                     name="title"
-                    value={editFields.title} // Use 'title' from editFields
+                    value={editFields.title}
                     onChange={handleChange}
                     className="text-3xl font-bold border border-gray-300 rounded-lg p-2"
                   />
@@ -197,9 +203,7 @@ const BookDetails = () => {
               ) : (
                 <>
                   <h1 className="text-3xl font-bold">
-                    {location.pathname.includes("/added")
-                      ? book.name
-                      : book.title}
+                    {isAddedPath ? book.name : book.title}
                   </h1>
                   <p className="text-muted-foreground">{book.subtitle}</p>
                   <div className="text-2xl font-bold">{book.price}</div>
@@ -218,26 +222,30 @@ const BookDetails = () => {
             <p className="text-muted-foreground">{book.desc}</p>
             <div className="flex items-center justify-between mt-5">
               <div className="flex gap-4">
-                <button
-                  onClick={handleEditToggle}
-                  className="bg-blue-500 text-white py-2 px-4 rounded-lg"
-                >
-                  {isEditing ? "Cancel" : "Edit"}
-                </button>
-                {isEditing && (
-                  <button
-                    onClick={handleUpdate}
-                    className="bg-green-500 text-white py-2 px-4 rounded-lg"
-                  >
-                    Save
-                  </button>
+                {!isAddedPath && (
+                  <>
+                    <button
+                      onClick={handleEditToggle}
+                      className="bg-blue-500 text-white py-2 px-4 rounded-lg"
+                    >
+                      {isEditing ? "Cancel" : "Edit"}
+                    </button>
+                    {isEditing && (
+                      <button
+                        onClick={handleUpdate}
+                        className="bg-green-500 text-white py-2 px-4 rounded-lg"
+                      >
+                        Save
+                      </button>
+                    )}
+                    <button
+                      onClick={handleDelete}
+                      className="border border-red-500 text-red-500 py-2 px-4 rounded-lg"
+                    >
+                      Delete
+                    </button>
+                  </>
                 )}
-                <button
-                  onClick={handleDelete}
-                  className="border border-red-500 text-red-500 py-2 px-4 rounded-lg"
-                >
-                  Delete
-                </button>
               </div>
             </div>
             <div className="grid gap-4">
@@ -253,53 +261,48 @@ const BookDetails = () => {
                     {book.publisher}
                   </li>
                   <li>
-                    <span className="font-medium">Publication Date:</span>{" "}
-                    {book.publishedDate}
-                  </li>
-                  <li>
-                    <span className="font-medium">Language:</span> English
-                  </li>
-                  <li>
-                    <span className="font-medium">Paperback:</span> {book.pages}{" "}
-                    pages
-                  </li>
-                  <li>
                     <span className="font-medium">ISBN-13:</span> {book.isbn13}
                   </li>
                   <li>
-                    <span className="font-medium">ISBN-10:</span> {book.isbn10}
+                    <span className="font-medium">Pages:</span> {book.pages}
+                  </li>
+                  <li>
+                    <span className="font-medium">Language:</span>{" "}
+                    {book.language}
+                  </li>
+                  <li>
+                    <span className="font-medium">Authors:</span> {book.author}
                   </li>
                 </ul>
               </div>
-              <div className="mt-5">
-                <h2 className="text-xl font-bold mb-3 mt-3">Reviews</h2>
-                <div className="mt-3">
-                  {reviews.length === 0 ? (
-                    <p>No reviews yet.</p>
-                  ) : (
-                    reviews.map((review, index) => (
-                      <div
-                        key={index}
-                        className="border p-4 rounded-lg mb-4 shadow-md"
-                      >
-                        <p>{review.text}</p>
-                        <div className="text-sm text-muted-foreground">
-                          By {review.by}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                <div className="mt-4">
-                  <h3 className="text-lg font-bold mb-2">Add a Review</h3>
+              <div>
+                <h2 className="text-xl font-bold mb-2 mt-3">All Reviews</h2>
+                <ul className="grid gap-2">
+                  {reviews.map((review, index) => (
+                    <li
+                      key={index}
+                      className="border border-gray-300 p-4 rounded-lg"
+                    >
+                      <p className="text-muted-foreground">{review.by} says:</p>
+                      <p>
+                        Opinion:
+                        <br />
+                        {review.text}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-5">
                   <textarea
                     value={review}
                     onChange={(e) => setReview(e.target.value)}
-                    className="border border-gray-300 rounded-lg p-2 w-full mb-2"
+                    rows="4"
+                    className="w-full border border-gray-300 rounded-lg p-2"
+                    placeholder="Write your review here..."
                   />
                   <button
                     onClick={handleReviewSubmit}
-                    className="bg-blue-500 text-white py-2 px-4 rounded-lg"
+                    className="mt-3 bg-green-500 text-white py-2 px-4 rounded-lg"
                   >
                     Submit Review
                   </button>
@@ -309,7 +312,7 @@ const BookDetails = () => {
           </div>
         </>
       ) : (
-        <div>Loading...</div>
+        <p>Loading...</p>
       )}
     </div>
   );

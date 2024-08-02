@@ -5,7 +5,7 @@ const cors = require("cors"); // Import cors
 const userRoutes = require("./routes/bookRoutes");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 7001;
 
 // Middleware
 app.use(cors()); // Enable CORS

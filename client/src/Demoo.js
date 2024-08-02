@@ -17,11 +17,11 @@ function Dash() {
         }
 
         const response = await axios.get(
-          `http://localhost:5000/api/users/${email}`
+          `http://localhost:7001/api/users/${email}`
         );
         setUser(response.data);
       } catch (err) {
-        console.error("Error fetching user data:", err); // Log error for debugging
+        console.error("Error fetching user data:", err);
         setError(err.message);
       }
     };

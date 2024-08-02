@@ -1,10 +1,13 @@
 const mongoose = require("mongoose");
 
+// Review schema definition
 const reviewSchema = new mongoose.Schema({
   by: String,
-  msg: String,
+  text: String, // Ensure the field matches 'text' instead of 'msg'
 });
 
+
+// Book schema definition
 const bookSchema = new mongoose.Schema({
   userAdded: {
     type: Boolean,
@@ -16,13 +19,10 @@ const bookSchema = new mongoose.Schema({
   price: String,
   image: String,
   url: String,
-  reviews: {
-    type: [reviewSchema],
-    default: [],
-  },
 });
 
-const userAdded = new mongoose.Schema({
+// UserAdded schema definition
+const userAddedSchema = new mongoose.Schema({
   name: String,
   author: String,
   subtitle: String,
@@ -34,12 +34,9 @@ const userAdded = new mongoose.Schema({
   url: String,
   isbn13: String,
   language: String,
-  reviews: {
-    type: [reviewSchema],
-    default: [],
-  },
 });
 
+// User schema definition
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -59,7 +56,7 @@ const userSchema = new mongoose.Schema({
     default: [],
   },
   added: {
-    type: [userAdded],
+    type: [userAddedSchema],
     default: [],
   },
   reviews: {
@@ -68,6 +65,7 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+// Create the Mongoose model for User schema
 const Main = mongoose.model("Main", userSchema);
 
 module.exports = Main;

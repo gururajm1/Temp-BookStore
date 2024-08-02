@@ -1,4 +1,3 @@
-// Signup.js
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -12,15 +11,17 @@ import { firebaseAuth } from "../dependencies/firebaseConfig";
 
 function Signup() {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (localStorage.getItem("book-auth") && localStorage.getItem("book-bug")) {
-      navigate("/dash");
-    }
-  }, [navigate]);
+  const [loading, setLoading] = useState(true); // Added loading state
+  const [error, setError] = useState("");
+  const [password, setPassword] = useState("");
+  const emailInputRef = useRef(null);
+  const userNameRef = useRef(null);
+  const userAgeRef = useRef(null);
+  const passwordInputRef = useRef(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
+      setLoading(false); // Set loading to false once auth state is determined
       if (currentUser) {
         if (
           !localStorage.getItem("book-auth") ||
@@ -30,17 +31,17 @@ function Signup() {
           localStorage.setItem("book-bug", currentUser.email);
           navigate("/dash");
         }
+      } else {
+        if (
+          localStorage.getItem("book-auth") &&
+          localStorage.getItem("book-bug")
+        ) {
+          navigate("/dash");
+        }
       }
     });
     return () => unsubscribe();
   }, [navigate]);
-
-  const [error, setError] = useState("");
-  const [password, setPassword] = useState("");
-  const emailInputRef = useRef(null);
-  const userNameRef = useRef(null);
-  const userAgeRef = useRef(null);
-  const passwordInputRef = useRef(null);
 
   const fetchBooks = async () => {
     try {
@@ -77,7 +78,7 @@ function Signup() {
       const books = await fetchBooks();
 
       // Send data to backend
-      await axios.post("http://localhost:5000/api/signup", {
+      await axios.post("http://localhost:7001/api/signup", {
         name,
         email,
         age,
@@ -93,6 +94,10 @@ function Signup() {
       console.error("Error during signup:", err); // Log error for debugging
     }
   };
+
+  if (loading) {
+    return <div>Loading...</div>; // Show a loading state while Firebase initializes
+  }
 
   return (
     <div className="w-full h-screen flex justify-center items-center bg-gray-100">

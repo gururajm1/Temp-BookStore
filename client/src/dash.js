@@ -49,54 +49,62 @@ function Dash() {
         }
 
         const response = await axios.get(
-          `http://localhost:5000/api/users/${email}`
+          `http://localhost:7001/api/users/${email}`
         );
-        setUser(response.data);
+        if (response.data) {
+          setUser(response.data);
+        } else {
+          setError("User data not found.");
+        }
       } catch (err) {
-        console.error("Error fetching user data:", err); // Log error for debugging
-        setError(err.message);
+        console.error("Welcome to BookBug Please Refresh your Page !!!");
+        setError("Welcome to BookBug Please Refresh your Page !!!");
       }
     };
 
     fetchUserData();
   }, [navigate]);
 
+
   if (error) return <div className="text-red-500">Error: {error}</div>;
+
+  const books = user?.books || [];
+  const addedBooks = user?.added || [];
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <header className="bg-white shadow-md p-4">
         <div className="flex items-center justify-between max-w-6xl mx-auto">
           <h1 className="text-2xl font-bold text-blue-500">
-            Bookstore Dashboard
+            BookBug Dashboard
           </h1>
           <div className="flex items-center gap-4">
             <Button variant="outline" onClick={() => navigate("/add")}>
               Add Book
             </Button>
-            <Button variant="outline" className="p-2 bg-red-400 text-white">
+            {/* <Button variant="outline" className="p-2 bg-red-400 text-white">
               Logout
-            </Button>
+            </Button> */}
           </div>
         </div>
       </header>
       <main className="p-4 sm:p-6 lg:p-8">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
-            Welcome
+          <h1 className="sm:text-2xl md:text-4xl font-bold">
+            Welcome 
           </h1>
           {user ? (
             <>
-              {user.books.length > 0 || user.added.length > 0 ? (
+              {books.length > 0 || addedBooks.length > 0 ? (
                 <div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mt-9">
                     {/* Render Books */}
-                    {user.books.length > 0 && (
+                    {books.length > 0 && (
                       <>
                         {/* <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-2 text-gray-700">
                           Books
                         </h3> */}
-                        {user.books.map((book, index) => (
+                        {books.map((book, index) => (
                           <Card
                             key={index}
                             className="overflow-hidden flex flex-col"
@@ -119,12 +127,12 @@ function Dash() {
                                     {book.price}
                                   </p>
                                 </div>
-                                <div className="flex items-center space-x-2 mt-2 sm:mt-0">
+                                {/* <div className="flex items-center space-x-2 mt-2 sm:mt-0">
                                   <p>Reviews:</p>
                                   <p className="text-blue-600 font-semibold">
-                                    {book.reviews.length}
+                                    {4}
                                   </p>
-                                </div>
+                                </div> */}
                               </div>
                             </CardContent>
                           </Card>
@@ -133,16 +141,18 @@ function Dash() {
                     )}
 
                     {/* Render Added Books */}
-                    {user.added.length > 0 && (
+                    {addedBooks.length > 0 && (
                       <>
                         {/* <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-2 text-gray-700 mt-8">
                           Added Books
                         </h3> */}
-                        {user.added.map((book, index) => (
+                        {addedBooks.map((book, index) => (
                           <Card
                             key={index}
                             className="overflow-hidden flex flex-col"
-                            onClick={() => navigate(`/details/added/${book.isbn13}`)}
+                            onClick={() =>
+                              navigate(`/details/added/${book.isbn13}`)
+                            }
                           >
                             <img
                               src={book.url}
@@ -164,7 +174,7 @@ function Dash() {
                                 <div className="flex items-center space-x-2 mt-2 sm:mt-0">
                                   <p>Reviews:</p>
                                   <p className="text-blue-600 font-semibold">
-                                    {book.reviews.length}
+                                    {book.reviews?.length || 0}
                                   </p>
                                 </div>
                               </div>

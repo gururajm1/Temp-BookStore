@@ -15,7 +15,7 @@ const Addform = () => {
     publicationYear: "",
     pages: "",
     imageLink: "",
-    isbn13: "", // Ensure this matches the field in the form
+    isbn13: "",
     language: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,7 +36,7 @@ const Addform = () => {
         throw new Error("User email not found");
       }
 
-      const response = await axios.post("http://localhost:5000/api/add-book", {
+      const response = await axios.post("http://localhost:7001/api/add-book", {
         email,
         bookData: formData,
       });
@@ -60,10 +60,9 @@ const Addform = () => {
       margin="0 auto"
       padding="20px"
       maxWidth="600px"
-      gap="15px"
+      gap="10px"
       gridTemplateColumns="1fr"
       sx={{
-        "& .MuiTextField-root": { width: "100%" },
         overflow: "hidden",
       }}
     >
@@ -73,6 +72,12 @@ const Addform = () => {
         onChange={handleChange}
         name="bookName"
         value={formData.bookName}
+        InputProps={{
+          style: {
+            height: "48px",  
+            padding: "8px", 
+          },
+        }}
       />
       <TextField
         type="text"
@@ -80,6 +85,12 @@ const Addform = () => {
         onChange={handleChange}
         name="authorName"
         value={formData.authorName}
+        InputProps={{
+          style: {
+            height: "48px", 
+            padding: "8px", 
+          },
+        }}
       />
       <TextField
         type="text"
@@ -87,6 +98,12 @@ const Addform = () => {
         onChange={handleChange}
         name="subtitle"
         value={formData.subtitle}
+        InputProps={{
+          style: {
+            height: "48px", 
+            padding: "8px", 
+          },
+        }}
       />
       <TextField
         type="text"
@@ -94,6 +111,12 @@ const Addform = () => {
         onChange={handleChange}
         name="description"
         value={formData.description}
+        InputProps={{
+          style: {
+            height: "48px", 
+            padding: "8px", 
+          },
+        }}
       />
       <TextField
         type="number"
@@ -101,6 +124,12 @@ const Addform = () => {
         onChange={handleChange}
         name="bookPrice"
         value={formData.bookPrice}
+        InputProps={{
+          style: {
+            height: "48px", 
+            padding: "8px", 
+          },
+        }}
       />
       <TextField
         type="text"
@@ -108,6 +137,12 @@ const Addform = () => {
         onChange={handleChange}
         name="publisher"
         value={formData.publisher}
+        InputProps={{
+          style: {
+            height: "48px", 
+            padding: "8px", 
+          },
+        }}
       />
       <TextField
         type="number"
@@ -115,6 +150,12 @@ const Addform = () => {
         onChange={handleChange}
         name="publicationYear"
         value={formData.publicationYear}
+        InputProps={{
+          style: {
+            height: "48px", 
+            padding: "8px", 
+          },
+        }}
       />
       <TextField
         type="number"
@@ -122,6 +163,12 @@ const Addform = () => {
         onChange={handleChange}
         name="pages"
         value={formData.pages}
+        InputProps={{
+          style: {
+            height: "48px", 
+            padding: "8px", 
+          },
+        }}
       />
       <TextField
         type="text"
@@ -129,26 +176,42 @@ const Addform = () => {
         onChange={handleChange}
         name="imageLink"
         value={formData.imageLink}
+        InputProps={{
+          style: {
+            height: "48px", 
+            padding: "8px", 
+          },
+        }}
       />
       <TextField
         type="text"
         label="Unique Id (ISBN-13)"
         onChange={handleChange}
-        name="isbn13" // Correct field name in formData
-        value={formData.isbn13} // Correct field name in formData
+        name="isbn13"
+        value={formData.isbn13}
+        InputProps={{
+          style: {
+            height: "48px", 
+            padding: "8px", 
+          },
+        }}
       />
-
       <TextField
         type="text"
         label="Language"
         onChange={handleChange}
         name="language"
         value={formData.language}
+        InputProps={{
+          style: {
+            height: "48px", 
+            padding: "8px",
+          },
+        }}
       />
-
       <button
         type="submit"
-        className={`mt-6 px-4 py-3 bg-zinc-800 text-white font-bold rounded hover:bg-gray-700 transition duration-300 ease-in-out ${
+        className={`mt-4 px-4 py-2 bg-zinc-800 text-white font-bold rounded hover:bg-gray-700 transition duration-300 ease-in-out ${
           isSubmitting ? "opacity-50 cursor-not-allowed" : ""
         }`}
         disabled={isSubmitting}

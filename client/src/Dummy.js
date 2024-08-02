@@ -15,7 +15,6 @@ const Dummy = () => {
           if (data.books) {
             setBooks(data.books);
 
-            // Log data before sending to backend
             console.log("Sending data to backend:", data.books);
 
             const backendResponse = await fetch(
