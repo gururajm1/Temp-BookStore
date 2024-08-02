@@ -12,7 +12,7 @@ const BookDetails = () => {
   const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editFields, setEditFields] = useState({
-    name: "",
+    title: "",
     subtitle: "",
     price: "",
     image: "",
@@ -22,9 +22,9 @@ const BookDetails = () => {
 
   useEffect(() => {
     const fetchBookData = async () => {
-      if (location.pathname.includes("/added")) {
-        const email = localStorage.getItem("book-bug");
-        try {
+      try {
+        if (location.pathname.includes("/added")) {
+          const email = localStorage.getItem("book-bug");
           const userResponse = await axios.get(
             `http://localhost:5000/api/users/${email}`
           );
@@ -34,7 +34,7 @@ const BookDetails = () => {
           if (addedBook) {
             setBook(addedBook);
             setEditFields({
-              name: addedBook.name,
+              title: addedBook.name, // Use 'name' instead of 'title'
               subtitle: addedBook.subtitle,
               price: addedBook.price,
               image: addedBook.image,
@@ -43,26 +43,21 @@ const BookDetails = () => {
           } else {
             setError("Book not found in the added list.");
           }
-        } catch (err) {
-          console.error("Error fetching user data:", err);
-          setError(err.message);
-        }
-      } else {
-        try {
+        } else {
           const response = await axios.get(
             `https://api.itbook.store/1.0/books/${isbn13}`
           );
           setBook(response.data);
           setEditFields({
-            name: response.data.title,
+            title: response.data.title,
             subtitle: response.data.subtitle,
             price: response.data.price,
             image: response.data.image,
           });
-        } catch (err) {
-          console.error("Error fetching book data:", err);
-          setError(err.message);
         }
+      } catch (err) {
+        console.error("Error fetching book data:", err);
+        setError(err.message);
       }
     };
 
@@ -97,7 +92,11 @@ const BookDetails = () => {
   const handleUpdate = async () => {
     try {
       const email = localStorage.getItem("book-bug");
-      await axios.put("http://localhost:5000/api/update-book", {
+      const url = location.pathname.includes("/added")
+        ? "http://localhost:5000/api/added-update"
+        : "http://localhost:5000/api/update-book";
+
+      await axios.put(url, {
         email,
         isbn13,
         ...editFields,
@@ -105,7 +104,7 @@ const BookDetails = () => {
 
       setBook({
         ...book,
-        name: editFields.name,
+        title: editFields.title,
         subtitle: editFields.subtitle,
         price: editFields.price,
         image: editFields.image,
@@ -115,6 +114,7 @@ const BookDetails = () => {
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating book:", error);
+      alert("Failed to update book. Please try again.");
     }
   };
 
@@ -154,10 +154,10 @@ const BookDetails = () => {
             <div className="grid gap-4">
               <img
                 src={editFields.image || "/placeholder.svg"}
-                alt={book.name}
+                alt={editFields.title} // Use 'title' from editFields
                 width={400}
                 height={500}
-                className="rounded-lg shadow-lg object-cover mt-20 transition-transform transform hover:scale-105 cursor-pointer fixed"
+                className="rounded-lg shadow-lg object-cover mt-20 transition-transform transform hover:scale-105 cursor-pointer"
               />
             </div>
           </div>
@@ -167,8 +167,8 @@ const BookDetails = () => {
                 <>
                   <input
                     type="text"
-                    name="name"
-                    value={editFields.name}
+                    name="title"
+                    value={editFields.title} // Use 'title' from editFields
                     onChange={handleChange}
                     className="text-3xl font-bold border border-gray-300 rounded-lg p-2"
                   />
@@ -196,7 +196,11 @@ const BookDetails = () => {
                 </>
               ) : (
                 <>
-                  <h1 className="text-3xl font-bold">{book.name}</h1>
+                  <h1 className="text-3xl font-bold">
+                    {location.pathname.includes("/added")
+                      ? book.name
+                      : book.title}
+                  </h1>
                   <p className="text-muted-foreground">{book.subtitle}</p>
                   <div className="text-2xl font-bold">{book.price}</div>
                 </>
@@ -260,49 +264,52 @@ const BookDetails = () => {
                     pages
                   </li>
                   <li>
-                    <span className="font-medium">ISBN-10:</span> {book.isbn10}
+                    <span className="font-medium">ISBN-13:</span> {book.isbn13}
                   </li>
                   <li>
-                    <span className="font-medium">ISBN-13:</span> {book.isbn13}
+                    <span className="font-medium">ISBN-10:</span> {book.isbn10}
                   </li>
                 </ul>
               </div>
-            </div>
-            <div className="mt-5">
-              <h2 className="text-xl font-bold mb-2">Reviews</h2>
-              {reviews.length > 0 ? (
-                <ul className="space-y-2">
-                  {reviews.map((review, index) => (
-                    <li
-                      key={index}
-                      className="border border-gray-300 p-2 rounded-lg"
-                    >
-                      <p className="font-medium">By {review.by}</p>
-                      <p>{review.text}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-muted-foreground">No reviews yet.</p>
-              )}
-              <textarea
-                className="border border-gray-300 rounded-lg p-2 mt-3 w-full"
-                rows="3"
-                placeholder="Write your review..."
-                value={review}
-                onChange={(e) => setReview(e.target.value)}
-              />
-              <button
-                onClick={handleReviewSubmit}
-                className="bg-blue-500 text-white py-2 px-4 rounded-lg mt-2"
-              >
-                Submit Review
-              </button>
+              <div className="mt-5">
+                <h2 className="text-xl font-bold mb-3 mt-3">Reviews</h2>
+                <div className="mt-3">
+                  {reviews.length === 0 ? (
+                    <p>No reviews yet.</p>
+                  ) : (
+                    reviews.map((review, index) => (
+                      <div
+                        key={index}
+                        className="border p-4 rounded-lg mb-4 shadow-md"
+                      >
+                        <p>{review.text}</p>
+                        <div className="text-sm text-muted-foreground">
+                          By {review.by}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <div className="mt-4">
+                  <h3 className="text-lg font-bold mb-2">Add a Review</h3>
+                  <textarea
+                    value={review}
+                    onChange={(e) => setReview(e.target.value)}
+                    className="border border-gray-300 rounded-lg p-2 w-full mb-2"
+                  />
+                  <button
+                    onClick={handleReviewSubmit}
+                    className="bg-blue-500 text-white py-2 px-4 rounded-lg"
+                  >
+                    Submit Review
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </>
       ) : (
-        <div className="text-center">Loading...</div>
+        <div>Loading...</div>
       )}
     </div>
   );

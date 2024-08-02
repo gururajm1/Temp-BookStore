@@ -107,6 +107,63 @@ exports.deleteBook = async (req, res) => {
   }
 };
 
+// exports.updateBook = async (req, res) => {
+//   try {
+//     const { email, isbn13, title, subtitle, price, image } = req.body;
+
+//     // Find the user by email
+//     const user = await Main.findOne({ email });
+//     if (!user) return res.status(404).json({ message: "User not found" });
+
+//     // Find the book in user's collection
+//     const book = user.books.find((book) => book.isbn13 === isbn13);
+//     if (!book) return res.status(404).json({ message: "Book not found" });
+
+//     // Update book details
+//     book.title = title;
+//     book.subtitle = subtitle;
+//     book.price = price;
+//     book.image = image;
+
+//     await user.save();
+
+//     res.json({ message: "Book updated successfully" });
+//   } catch (error) {
+//     console.error("Error updating book:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
+// exports.updateAddedBook = async (req, res) => {
+//   try {
+//     const { email, isbn13, title, subtitle, price, image } = req.body;
+
+//     // Find the user by email
+//     const user = await Main.findOne({ email });
+//     if (!user) return res.status(404).json({ message: "User not found" });
+
+//     // Find the book in the added list
+//     const book = user.added.find((book) => book.isbn === isbn13);
+//     if (!book)
+//       return res.status(404).json({ message: "Book not found in added list" });
+
+
+//     // Update book details
+//     book.title = title;
+//     book.subtitle = subtitle;
+//     book.price = price;
+//     book.image = image;
+
+//     await user.save();
+
+//     res.json({ message: "Added book updated successfully" });
+//   } catch (error) {
+//     console.error("Error updating added book:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
+
 exports.updateBook = async (req, res) => {
   try {
     const { email, isbn13, title, subtitle, price, image } = req.body;
@@ -115,7 +172,7 @@ exports.updateBook = async (req, res) => {
     const user = await Main.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Find the book in user's collection
+    // Find the book in the user's collection
     const book = user.books.find((book) => book.isbn13 === isbn13);
     if (!book) return res.status(404).json({ message: "Book not found" });
 
@@ -143,10 +200,9 @@ exports.updateAddedBook = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     // Find the book in the added list
-    const book = user.added.find((book) => book.isbn === isbn13);
+    const book = user.added.find((book) => book.isbn13 === isbn13);
     if (!book)
       return res.status(404).json({ message: "Book not found in added list" });
-
 
     // Update book details
     book.title = title;
@@ -162,6 +218,7 @@ exports.updateAddedBook = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 exports.updateBooks = async (req, res) => {
